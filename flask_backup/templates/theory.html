@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% block body %}
+<div class="card"><h2>🎯 Aim</h2>
+<p>To implement <b>Logistic Regression</b> for classification, train it on a real dataset and evaluate its performance using accuracy, precision, recall, F1-score, confusion matrix and the ROC curve.</p>
+<h3>Objectives</h3>
+<ul><li>Understand how a linear model + sigmoid function produces class probabilities.</li>
+<li>Split data into training and testing sets and apply feature scaling.</li>
+<li>Study the effect of the regularisation parameter <b>C</b> and the number of iterations.</li>
+<li>Interpret evaluation metrics and visualisations for binary and multiclass problems.</li></ul></div>
+
+<div class="card"><h2>📖 Introduction</h2>
+<p>Despite its name, Logistic Regression is a <b>classification</b> algorithm. It predicts the <i>probability</i> that a sample belongs to a class. If that probability is above a threshold (normally 0.5) the sample is assigned to that class. It is a <b>supervised</b> learning method — it learns from labelled examples — and is one of the most widely used baseline models in machine learning.</p></div>
+
+<div class="grid g2">
+<div class="card"><h2>🧮 Mathematical Explanation</h2>
+<h3>1. Linear score</h3>
+<div class="formula">z = w₁x₁ + w₂x₂ + … + wₙxₙ + b = w·x + b<small>w = weights (learned), b = bias/intercept</small></div>
+<h3>2. Sigmoid (logistic) function</h3>
+<div class="formula">σ(z) = 1 / (1 + e<sup>−z</sup>)<small>Squashes any real number into the range (0, 1)</small></div>
+<h3>3. Probability &amp; decision</h3>
+<div class="formula">P(y = 1 | x) = σ(w·x + b)<small>Predict class 1 if P ≥ 0.5, otherwise class 0</small></div>
+<h3>4. Log-odds (logit)</h3>
+<div class="formula">ln( p / (1 − p) ) = w·x + b<small>The model is linear in the log-odds</small></div>
+<h3>5. Loss function (Log-loss / cross-entropy)</h3>
+<div class="formula">J(w) = −(1/m) Σ [ y·ln(p) + (1 − y)·ln(1 − p) ] + (1 / 2C)·‖w‖²<small>The last term is L2 regularisation; C is its <i>inverse</i> strength</small></div>
+<h3>6. Multiclass (softmax)</h3>
+<div class="formula">P(y = k | x) = e<sup>z<sub>k</sub></sup> / Σⱼ e<sup>z<sub>j</sub></sup><small>One score z for each class; the probabilities sum to 1</small></div></div>
+
+<div class="card"><h2>📈 The Sigmoid Curve</h2>
+<img class="plot" src="data:image/png;base64,{{ sigmoid_img }}" alt="Sigmoid">
+<p class="explain" style="margin-top:14px">When z = 0 the probability is exactly 0.5. Large positive z → probability near 1; large negative z → near 0. This is what turns a straight-line score into a probability.</p>
+<h2 style="margin-top:20px">⚙️ Working Principle</h2>
+<ol><li>Start with random/zero weights.</li><li>Compute z and the probability p for every training sample.</li>
+<li>Measure the error with log-loss.</li><li>Update the weights to reduce the loss (gradient-based optimiser such as L-BFGS).</li>
+<li>Repeat until the loss stops improving (convergence) or max iterations is reached.</li>
+<li>Use the final weights to predict probabilities for new data.</li></ol></div>
+</div>
+
+<div class="card"><h2>📝 Algorithm (Step-by-step)</h2>
+<ol><li><b>Load</b> the dataset (features X and labels y).</li>
+<li><b>Split</b> into training and testing sets (stratified).</li>
+<li><b>Standardise</b> features: x' = (x − mean) / std, using <u>training</u> statistics only.</li>
+<li><b>Initialise</b> the Logistic Regression model with C, solver and max_iter.</li>
+<li><b>Train</b> (fit) the model on the training data by minimising log-loss.</li>
+<li><b>Predict</b> labels and probabilities for the test set.</li>
+<li><b>Evaluate</b> with accuracy, precision, recall, F1, confusion matrix and ROC-AUC.</li>
+<li><b>Tune</b> C / iterations and compare results; write the conclusion.</li></ol></div>
+
+<div class="grid g3">
+<div class="card"><h2>👍 Advantages</h2><ul><li>Simple, fast and easy to implement</li><li>Gives probabilities, not just labels</li><li>Coefficients are interpretable</li><li>Works well on linearly separable data</li><li>Regularisation reduces overfitting</li></ul></div>
+<div class="card"><h2>👎 Limitations</h2><ul><li>Assumes a linear decision boundary</li><li>Sensitive to outliers and unscaled features</li><li>Struggles with complex non-linear patterns</li><li>Needs reasonably independent features</li></ul></div>
+<div class="card"><h2>🌍 Applications</h2><ul><li>Disease diagnosis (e.g. tumour benign / malignant)</li><li>Spam e-mail detection</li><li>Credit-risk and fraud detection</li><li>Customer churn prediction</li><li>Click-through-rate prediction</li></ul></div>
+</div>
+<div class="center"><a class="btn" href="/experiment">🧪 Go to the Experiment →</a></div>
+{% endblock %}

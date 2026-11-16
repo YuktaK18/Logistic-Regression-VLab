@@ -1,0 +1,90 @@
+{% extends "base.html" %}{% block body %}
+{% if error %}<div class="alert err">⚠️ {{ error }}</div>{% endif %}
+
+<div class="card"><h2>⚙️ Experiment Configuration</h2>
+<form method="post" action="/experiment" id="expform">
+<div class="row">
+  <div class="field"><label for="dataset">Dataset</label>
+    <select name="dataset" id="dataset">{% for k, d in datasets.items() %}<option value="{{ k }}" {{ 'selected' if k == p.dataset else '' }}>{{ d.label }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="model">Model<span class="hint">Pick a Logistic Regression variant or a comparison model</span></label>
+    <select name="model" id="model">{% for k, m in models.items() %}<option value="{{ k }}" {{ 'selected' if k == p.model else '' }}>{{ m.label }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Test size: <span id="tv">{{ p.test_pct }}</span>%<span class="hint">Remaining data is used for training</span></label>
+    <input type="range" name="test_pct" min="10" max="50" step="5" value="{{ p.test_pct }}" oninput="tv.textContent=this.value"></div>
+  <div class="field"><label for="C">C (inverse regularisation)<span class="hint">Small = simpler model, large = fits training data closely</span></label>
+    <input type="number" name="C" id="C" value="{{ p.C }}" min="0.0001" max="10000" step="any" list="cvals">
+    <datalist id="cvals"><option>0.001</option><option>0.01</option><option>0.1</option><option>1</option><option>10</option><option>100</option></datalist></div>
+</div>
+<div class="row" style="margin-top:16px">
+  <div class="field"><label for="max_iter">Max iterations<span class="hint">Optimiser stops after this many steps</span></label>
+    <input type="number" name="max_iter" id="max_iter" value="{{ p.max_iter }}" min="5" max="10000"></div>
+  <div class="field"><label for="solver">Solver</label>
+    <select name="solver" id="solver"><option value="lbfgs" {{ 'selected' if p.solver=='lbfgs' }}>lbfgs (default)</option><option value="newton-cg" {{ 'selected' if p.solver=='newton-cg' }}>newton-cg</option></select></div>
+  <div class="field"><label for="seed">Random seed<span class="hint">Same seed = same split every time</span></label>
+    <input type="number" name="seed" id="seed" value="{{ p.seed }}" min="0" max="99999"></div>
+  <div class="field"><label>Preprocessing</label>
+    <label style="font-weight:500"><input type="checkbox" name="scale" {{ 'checked' if p.scale }}> Standardise features (StandardScaler)</label></div>
+</div>
+<div style="margin-top:20px"><button class="btn" type="submit">▶ Run Experiment</button></div>
+</form></div>
+
+{% if not res and not error %}
+<div class="card"><h2>👋 Ready?</h2><p>Choose your settings above and press <b>Run Experiment</b>. A real Logistic Regression model will be trained and all results, graphs and the conclusion will appear here.</p></div>
+{% endif %}
+
+{% if res %}
+{% if obs_no %}<div class="alert warn" style="background:#d1fae5;color:#065f46;border-color:#a7f3d0">📒 Recorded as observation #{{ obs_no }}. See the <a href="/observations">Observations</a> page.</div>{% endif %}
+<div class="stepper">
+<div class="step"><b>1 · Dataset</b><p>{{ res.dataset }}<br>{{ res.n_train + res.n_test }} samples, {{ res.n_features }} features, {{ res.n_classes }} classes</p></div>
+<div class="step"><b>2 · Preprocessing</b><p>Stratified split: {{ res.n_train }} train / {{ res.n_test }} test.<br>{{ 'StandardScaler fitted on train data' if res.params.scale else 'No scaling applied' }}</p></div>
+<div class="step"><b>3 · Training</b><p>{{ res.model_label }}{% if res.has_C %}, C={{ '%g'|format(res.params.C) }}{% endif %}.{% if res.n_iter %}<br>Used {{ res.n_iter }} iteration(s) {{ '✓ converged' if res.converged else '⚠ not converged' }}{% endif %}</p></div>
+<div class="step"><b>4 · Testing</b><p>Predicted {{ res.n_test }} unseen samples.<br>{{ res.n_test - res.n_wrong }} correct, {{ res.n_wrong }} wrong</p></div>
+<div class="step"><b>5 · Evaluation</b><p>Accuracy {{ '%.2f'|format(res.metrics.accuracy*100) }}%<br>AUC {{ '%.3f'|format(res.metrics.auc) }}</p></div>
+</div>
+{% if not res.converged %}<div class="alert warn">⚠️ The solver hit the iteration limit and may not have fully converged. Increase <b>max iterations</b> or enable standardisation.</div>{% endif %}
+
+<div class="card"><h2>🏅 Performance Metrics</h2>
+<p class="explain">Computed on the <b>test set</b> (data the model has never seen). {{ res.avg_note }}.</p>
+<div class="metrics">
+<div class="metric"><div class="v">{{ '%.2f'|format(res.metrics.accuracy*100) }}%</div><div class="l">Test Accuracy</div></div>
+<div class="metric"><div class="v">{{ '%.3f'|format(res.metrics.precision) }}</div><div class="l">Precision</div></div>
+<div class="metric"><div class="v">{{ '%.3f'|format(res.metrics.recall) }}</div><div class="l">Recall</div></div>
+<div class="metric"><div class="v">{{ '%.3f'|format(res.metrics.f1) }}</div><div class="l">F1-score</div></div>
+<div class="metric"><div class="v">{{ '%.3f'|format(res.metrics.auc) }}</div><div class="l">ROC-AUC</div></div>
+<div class="metric"><div class="v">{{ '%.2f'|format(res.metrics.train_accuracy*100) }}%</div><div class="l">Train Accuracy</div></div>
+</div></div>
+
+<div class="grid g2">
+<div class="card"><h2>🟦 Confusion Matrix</h2><p class="explain">Rows = actual class, columns = predicted class. The diagonal shows correct predictions; everything else is an error.</p>
+<img class="plot" src="data:image/png;base64,{{ res.images.cm }}" alt="Confusion matrix"></div>
+<div class="card"><h2>📉 ROC Curve &amp; AUC</h2><p class="explain">A curve hugging the top-left corner means the model separates the classes well. The dashed line is random guessing.</p>
+<img class="plot" src="data:image/png;base64,{{ res.images.roc }}" alt="ROC curve"></div>
+</div>
+
+<div class="card"><h2>📋 Classification Report</h2>
+<div class="tbl"><table><thead><tr><th>Class</th><th class="num">Precision</th><th class="num">Recall</th><th class="num">F1-score</th><th class="num">Support</th></tr></thead><tbody>
+{% for r in res.report %}<tr><td><b>{{ r.name }}</b></td><td class="num">{{ '%.3f'|format(r.precision) }}</td><td class="num">{{ '%.3f'|format(r.recall) }}</td><td class="num">{{ '%.3f'|format(r.f1) }}</td><td class="num">{{ r.support }}</td></tr>{% endfor %}
+</tbody></table></div></div>
+
+<div class="grid g2">
+{% if res.images.coef %}<div class="card"><h2>🔬 Learned Coefficients</h2><p class="explain">Weights show how strongly each feature pushes the prediction. Bigger magnitude = more influence.{% if res.n_zero %} <b>{{ res.n_zero }}</b> coefficient(s) are exactly zero.{% endif %}</p>
+<img class="plot" src="data:image/png;base64,{{ res.images.coef }}" alt="Coefficients"></div>{% endif %}
+{% if res.images.sweep %}<div class="card"><h2>🎚️ Effect of C</h2><p class="explain">The model was re-trained for many C values on the same split. Best test accuracy in this sweep: <b>{{ '%.2f'|format(res.best_C_acc*100) }}%</b> at C ≈ <b>{{ '%g'|format(res.best_C) }}</b>.</p>
+<img class="plot" src="data:image/png;base64,{{ res.images.sweep }}" alt="C sweep"></div>{% endif %}
+<div class="card"><h2>🏁 Model Comparison</h2><p class="explain">All models were trained on the same split. This helps you justify your model choice.</p>
+<img class="plot" src="data:image/png;base64,{{ res.images.compare }}" alt="Model comparison"></div>
+</div>
+
+<div class="card"><h2>🗺️ Decision Regions</h2><p class="explain">An illustration: a small Logistic Regression trained on only the 2 most influential features, so the boundary can be drawn in 2-D. Dots are test samples.</p>
+<img class="plot" style="max-width:640px" src="data:image/png;base64,{{ res.images.boundary }}" alt="Decision regions"></div>
+
+<div class="card"><h2>🔮 Predictions on Test Set</h2>
+<p class="explain">Each row is one unseen sample. <span class="pill red">Red rows</span> are wrong predictions. Showing the first 40 of {{ res.n_test }} rows — the CSV has all of them.</p>
+<div class="tbl"><table><thead><tr><th>Sample #</th><th>Actual</th><th>Predicted</th><th>Result</th><th class="num">Confidence</th>{% for c in res.classes %}<th class="num">P({{ c[:10] }})</th>{% endfor %}</tr></thead><tbody>
+{% for r in res.preds[:40] %}<tr class="{{ '' if r.ok else 'wrong' }}"><td>{{ r.sample }}</td><td>{{ r.actual }}</td><td>{{ r.predicted }}</td><td>{{ '✅' if r.ok else '❌' }}</td><td class="num">{{ '%.1f'|format(r.confidence*100) }}%</td>{% for v in r.probs %}<td class="num">{{ '%.3f'|format(v) }}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div>
+<div style="margin-top:16px"><button class="btn alt" type="submit" form="expform" formaction="/download" formmethod="post">⬇ Download predictions (CSV)</button></div></div>
+
+<div class="card concl"><h2>✅ Conclusion (auto-generated from your results)</h2>
+{% for line in res.conclusion %}<p>{{ line }}</p>{% endfor %}</div>
+{% endif %}
+{% endblock %}

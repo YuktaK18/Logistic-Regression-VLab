@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% block body %}
+<div class="stepper">
+<div class="step"><b>1 · Dataset</b><p>Choose Iris, Breast Cancer or Wine and inspect it.</p></div>
+<div class="step"><b>2 · Preprocessing</b><p>Stratified train/test split + feature standardisation.</p></div>
+<div class="step"><b>3 · Training</b><p>Fit Logistic Regression by minimising log-loss.</p></div>
+<div class="step"><b>4 · Testing</b><p>Predict labels &amp; probabilities on unseen data.</p></div>
+<div class="step"><b>5 · Evaluation</b><p>Metrics, confusion matrix, ROC and conclusion.</p></div>
+</div>
+<div class="card"><h2>🧭 Procedure</h2>
+<ol>
+<li>Open <a href="/dataset">Dataset Explorer</a>, select a dataset and study its rows, columns, features, target and class balance.</li>
+<li>Open <a href="/experiment">Run Experiment</a> and select the same dataset.</li>
+<li>Select a <b>model</b>: a Logistic Regression variant (L2, L1, Elastic Net, none) or a comparison model (KNN, Decision Tree, SVM).</li>
+<li>Set the <b>test size</b> (e.g. 25%). A larger test set gives a more reliable estimate but leaves less data for training.</li>
+<li>Set <b>C</b> (default 1). Small C = strong regularisation (simpler model). Large C = weak regularisation (model fits training data closely).</li>
+<li>Set <b>max iterations</b> (default 200) and choose the solver. Keep <b>standardisation</b> ticked.</li>
+<li>Click <b>Run Experiment</b>. A real scikit-learn model is trained and evaluated.</li>
+<li>Study the metrics, confusion matrix, ROC curve, C-sweep graph and predictions table.</li>
+<li>Repeat with different settings (change <b>one</b> setting at a time). Every run is recorded automatically on the <a href="/observations">Observations</a> page.</li>
+<li>Download the predictions CSV and read the auto-generated conclusion.</li></ol></div>
+<div class="grid g2">
+<div class="card"><h2>🔍 What each stage means</h2>
+<h3>Dataset</h3><p>Rows are samples, columns are features, and the target is what we want to predict.</p>
+<h3>Preprocessing</h3><p>Features have different scales (e.g. 0.1 vs 1000). Standardising puts them on the same scale so the optimiser converges faster and C acts fairly on every feature.</p>
+<h3>Training</h3><p>The model searches for weights that minimise the log-loss on the training set.</p>
+<h3>Testing</h3><p>Predictions are made on data the model never saw — this shows how it will behave in the real world.</p>
+<h3>Evaluation</h3><p>Metrics quantify how good the predictions are; plots show <i>where</i> the model makes mistakes.</p></div>
+<div class="card"><h2>📏 Metrics at a glance</h2>
+<div class="formula">Accuracy = (TP + TN) / (TP + TN + FP + FN)</div>
+<div class="formula">Precision = TP / (TP + FP)<small>Of all predicted positives, how many were right?</small></div>
+<div class="formula">Recall = TP / (TP + FN)<small>Of all actual positives, how many did we find?</small></div>
+<div class="formula">F1 = 2 · Precision · Recall / (Precision + Recall)</div>
+<p><b>ROC curve</b> plots True-Positive-Rate vs False-Positive-Rate at every threshold. <b>AUC</b> = area under it (1.0 perfect, 0.5 random).</p></div>
+</div>
+{% endblock %}

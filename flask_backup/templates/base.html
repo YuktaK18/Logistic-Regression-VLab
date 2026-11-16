@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }} · Logistic Regression VLab</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<button class="menu-btn" onclick="document.body.classList.toggle('nav-open')" aria-label="Menu">☰</button>
+<aside class="sidebar">
+  <div class="brand"><span class="logo">🧪</span><div><b>Logistic Regression VLab</b><small>Computer Engineering · VES</small></div></div>
+  <nav>
+    {% for key, url, icon, label in nav %}
+    <a href="{{ url }}" class="{{ 'active' if page == key else '' }}"><span>{{ icon }}</span>{{ label }}</a>
+    {% endfor %}
+  </nav>
+  <div class="side-foot"><b>Logistic Regression VLab</b><br>Virtual Lab on localhost<br>Python · scikit-learn · Flask</div>
+</aside>
+<main class="content">
+  <header class="page-head"><p class="crumb">Logistic Regression VLab</p><h1>{{ title }}</h1></header>
+  {% block body %}{% endblock %}
+</main>
+</body></html>

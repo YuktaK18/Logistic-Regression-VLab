@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block body %}
+<p class="explain">Every time you press <b>Run Experiment</b>, the settings and results are recorded here automatically — these are your <b>actual observations</b>. The log is saved in <code>observations_log.json</code>.</p>
+{% if not rows %}
+<div class="card"><h2>No observations yet</h2><p>Go to <a href="/experiment">Run Experiment</a>, run the model with a few different settings (e.g. change only C, or switch scaling off) and come back.</p></div>
+{% else %}
+<div class="card"><h2>📒 Observation Table</h2>
+<div class="tbl"><table><thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead><tbody>
+{% for r in table %}<tr>{% for v in r %}<td {% if loop.index > 3 %}class="num"{% endif %}>{{ v }}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div></div>
+<div class="card"><h2>📊 Accuracy of every run</h2><img class="plot" src="data:image/png;base64,{{ chart }}" alt="Accuracy of runs"></div>
+<div class="card"><h2>🔎 What the results show</h2><ul>{% for line in insights %}<li>{{ line }}</li>{% endfor %}</ul></div>
+<form method="post" class="row"><a class="btn alt" href="/observations.csv">⬇ Download observations (CSV)</a>
+<button class="btn" style="background:#dc2626" name="action" value="clear" type="submit">🗑️ Clear all observations</button></form>
+{% endif %}
+{% endblock %}
